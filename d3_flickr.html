@@ -1,0 +1,23 @@
+<html>
+	<head>
+		<title>D3 - Flickr Random Photo</title>
+	</head>
+	<script src="http://d3js.org/d3.v2.js"></script>
+	<script type="text/javascript">
+		var src = [];
+		function jsonFlickrApi(rsp) {
+			if (rsp.stat != "ok") { window.location.reload(); }
+			for (var i = 0; i < rsp.photos.photo.length; i++) {
+				photo = rsp.photos.photo[i];
+				src[i] = "http://farm" + photo.farm + ".static.flickr.com/" + photo.server + "/" + photo.id + "_" + photo.secret + ".jpg";
+			}
+		}
+	</script>
+	<script type="text/javascript" language="javascript" src="http://api.flickr.com/services/rest/?format=json&sort=random&method=flickr.photos.search&tags=travel&api_key=d4270df18b6843be533c471e9a8c57b2"></script>
+	<script type="text/javascript">
+		window.onload = function() {
+			d3.select("body").selectAll("img").data(src).enter().append("img").attr("src", function(d) { return d; });
+		}
+	</script>
+	<body />
+</html>
