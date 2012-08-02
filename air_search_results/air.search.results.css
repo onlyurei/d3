@@ -1,0 +1,55 @@
+html, body, div, span, p, h1, ul, li, a, img {
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+body {
+	font: 10px Helvetica, Arial, sans-serif;
+}
+#wrapper {
+	margin: 10px;	
+}
+#header {
+	padding-bottom: 10px;
+}
+#heading {
+	text-align: center;
+}
+#content {
+	position: relative;
+	height: 100%;
+	width: 1440px;
+	background: #fefefe; /* Old browsers */
+	background: -moz-linear-gradient(top, #fefefe 0%, #ade6ff 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #fefefe), color-stop(100%, #ade6ff)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #fefefe 0%, #ade6ff 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #fefefe 0%, #ade6ff 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #fefefe 0%, #ade6ff 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #fefefe 0%, #ade6ff 100%); /* W3C */
+}
+.tick {
+	border-left: 1px solid #000;
+	height: 100%;
+	position: absolute;
+	top: 0;
+}
+.flight {
+	color: #fff;
+	background: none; 
+	cursor: auto;
+	position: absolute;
+	left: 0;
+	width: 1440px;
+}
+.flight.hover {
+	background: rgba(0, 177, 255, .7);
+	cursor: pointer; 	
+}
+.leg {
+	background: rgba(0, 37, 60, .95);
+	border: 1px solid #000;
+	position: absolute;
+}
+.leg.hover {
+	background: rgba(0, 177, 255, 1);
+}
