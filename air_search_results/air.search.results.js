@@ -37,23 +37,23 @@ window.onload = function() {
 	}
 	
 	//build origin and destination aiports
-	origin = airports[randomMax(airports.length)];
-	dest = origin;
-	while (origin == dest) {
+	dest = origin = airports[randomMax(airports.length)];
+	while (dest == origin) {
 		dest = airports[randomMax(airports.length)];
 	}
 
 	//build random flights
 	var numOfFlights = randomMinMax(minNumOfFlights, maxNumOfFlights);
 	for (var i = 0; i < numOfFlights; i++) {
-		var flight = [];
+		var flight = {};
 		var leg = {};
 		var numOfLegs = randomMinMax(minNumOfStops, maxNumOfStops) + 1;
 		var departTime = randomMinMax(minDepartTime, maxArrivalTime);
 		var legAirports = [];
 		var legDurationSum = 0;
 		do {
-			flight = [];
+			flight = {};
+			flight.legs = [];
 			leg = {};
 			numOfLegs = randomMinMax(minNumOfStops, maxNumOfStops) + 1;
 			departTime = randomMinMax(minDepartTime, maxArrivalTime);
@@ -76,9 +76,10 @@ window.onload = function() {
 			for (var j = 0; j < numOfLegs; j++) {
 				leg = buildLeg(legAirports[j], legAirports[j + 1], departTime); 
 				departTime += leg.arrive + randomMinMax(minLayoverTime, maxLayoverTime);
-				flight.push(leg);
+				flight.legs.push(leg);
 			}
 		} while (leg.arrive > maxArrivalTime);
+		flight = buildFlightInfo(flight);
 		flights.push(flight);
 	}
 	
@@ -87,8 +88,35 @@ window.onload = function() {
 		leg.origin = airport1;
 		leg.dest = airport2;
 		leg.depart = departTime;
-		leg.arrive = leg.depart + distanceBetweenAirports(airport1, airport2);
+		leg.duration = distanceBetweenAirports(airport1, airport2);
+		leg.arrive = leg.depart + leg.duration;
 		return leg;
+	}
+	
+	function buildFlightInfo(flight) {
+		flight.origin = flight.legs[0].origin;
+		flight.dest = flight.legs[flight.legs.length - 1].dest;
+		flight.depart = flight.legs[0].depart;
+		flight.arrive = flight.legs[flight.legs.length - 1].arrive;
+		flight.duration = flight.arrive - flight.depart;
+		var airTime = 0;
+		for (var i = 0; i < flight.legs.length; i++) {
+			airTime += flight.legs[i].duration;
+		}
+		flight.airTime = airTime;
+		flight.layover = flight.duration - flight.airTime;
+		flight.stops = flight.legs.length - 1;
+		flight.distance = distanceBetweenAirports(flight.origin, flight.dest);
+		flight.price = Math.ceil(flight.distance * flightPriceLegsFactor(flight) * flightPriceTimeFactor(flight) / 1000);
+		return flight;
+	}
+	
+	function flightPriceLegsFactor(flight) {
+		return flight.distance / flight.duration / flight.legs.length;
+	}
+	
+	function flightPriceTimeFactor(flight) {
+		return Math.min(Math.abs(flight.depart - 60 * 4) + Math.abs(flight.arrive - 60 * 4), Math.abs(flight.depart - 60 * 23) + Math.abs(flight.arrive - 60 * 23));
 	}
 	
 	function distanceBetweenAirports(airport1, airport2) {
@@ -142,29 +170,51 @@ window.onload = function() {
 		}
 	}
 	
-	d3.select("#heading").text(function () { return origin + " -> " + dest; });
-
-	d3.select("#ticks").selectAll("div").data(ticks).enter().append("div")
-		.attr("class", "tick")
-		.style("left", function (d) { return d + "px"; })
-		.text(function (d) { return to12(minToTime(d)); });
-
-	d3.select("#flights").selectAll("div").data(flights).enter().append("div")
-		.attr("class", "flight")
-		.style("height", function () { return cardHeight + cardBorderWidth * 2 + "px"; })
-		.style("top", function (d, i) { var height = cardHeight + cardVerticalMargin + cardBorderWidth * 2; contentHeight += height; return 20 + i * (height) + "px"; })
-		.on("mouseover", function () { this.className = "flight hover"; })
-		.on("mouseout", function () { this.className = "flight"; })
-		.selectAll("div").data(function (d) { return d; }).enter().append("div")
+	function draw(flights, attr) {
+		d3.select("#fromTo").text(function() { return origin + " -> " + dest; });
+		d3.select("#flightAttr").text(function() { return attr; });
+		d3.selectAll("#ticks *").remove();
+		d3.select("#ticks").selectAll("div.tick").data(ticks).enter().append("div")
+			.attr("class", "tick")
+			.transition()
+			.duration(800)
+			.style("left", function(d) { return d + "px"; })
+			.text(function(d) { return to12(minToTime(d)); });
+		d3.selectAll("#flights *").remove();
+		d3.select("#flights").selectAll("div.flight").data(flights).enter().append("div")
+			.attr("class", "flight")
+			.style("height", function() { return cardHeight + cardBorderWidth * 2 + "px"; })
+			.style("top", function(d, i) { var height = cardHeight + cardVerticalMargin + cardBorderWidth * 2; contentHeight += height; return 20 + i * (height) + "px"; })
+			.text(function(d) { return d[attr]; })
+			.selectAll("div.leg").data(function(d) { return d.legs; }).enter().append("div")
 				.attr("class", "leg")
-				.style("left", function (d) { return d.depart + "px"; })
-				.style("border-width", function () { return cardBorderWidth + "px"; })
-				.style("height", function () { return cardHeight + "px"; })
-				.style("width", function (d) { return d.arrive - d.depart + "px"; })
-				.text(function (d) { return d.origin + " (" + to12(minToTime(d.depart)) + ") -> " + d.dest + " (" + to12(minToTime(d.arrive)) + ")";  })
-				.on("mouseover", function () { this.className = "leg hover"; })
-				.on("mouseout", function () { this.className = "leg"; })
-				.on("click", function(d) { showLeg(d); });
-				
-	d3.select("#content").style("height", function() { return contentHeight + 20 + "px"; });
+				.transition()
+				.delay(function (d, i) { return i * d.duration; })
+				.duration(function (d) { return d.duration * 2; })
+				.style("left", function(d) { return d.depart + "px"; })
+				.style("border-width", function() { return cardBorderWidth + "px"; })
+				.style("height", function() { return cardHeight + "px"; })
+				.style("width", function(d) { return d.arrive - d.depart + "px"; })
+				.text(function(d) { return d.origin + " (" + to12(minToTime(d.depart)) + ") -> " + d.dest + " (" + to12(minToTime(d.arrive)) + ")";  });
+		d3.selectAll(".flight")
+			.on("mouseover", function() { this.className = "flight hover"; })
+			.on("mouseout", function() { this.className = "flight"; })
+		d3.selectAll(".flight .leg")
+			.on("mouseover", function() { this.className = "leg hover"; })
+			.on("mouseout", function() { this.className = "leg"; })
+			.on("click", function(d) { showLeg(d); });
+		d3.select("#content").style("height", function() { return contentHeight + 20 + "px"; });
+	}
+	
+	function sortFlightsAscend(flights, attr) {
+		flights.sort(function (a, b) { return a[attr] - b[attr]; });
+	}
+	
+	function sortFlightsDescend(flights, attr) {
+		flights.sort(function (a, b) { return b[attr] - a[attr]; });
+	}
+	
+	sortFlightsAscend(flights, "price");
+	draw(flights, "price");
+			
 }

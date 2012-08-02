@@ -1,10 +1,10 @@
-html, body, div, span, p, h1, ul, li, a, img {
+html, body, div, span, p, h1, h2, ul, li, a, img {
 	margin: 0;
 	padding: 0;
 	border: none;
 }
 body {
-	font: 10px Helvetica, Arial, sans-serif;
+	font: 12px Arial, sans-serif;
 }
 #wrapper {
 	margin: 10px;	
@@ -12,8 +12,11 @@ body {
 #header {
 	padding-bottom: 10px;
 }
-#heading {
+#fromTo {
 	text-align: center;
+}
+#flightAttr {
+	
 }
 #content {
 	position: relative;
@@ -34,7 +37,7 @@ body {
 	top: 0;
 }
 .flight {
-	color: #fff;
+	color: #000;
 	background: none; 
 	cursor: auto;
 	position: absolute;
@@ -45,11 +48,13 @@ body {
 	background: rgba(0, 177, 255, .7);
 	cursor: pointer; 	
 }
-.leg {
+.flight .leg {
+	color: #fff;
 	background: rgba(0, 37, 60, .95);
 	border: 1px solid #000;
 	position: absolute;
+	top: 0;
 }
-.leg.hover {
+.flight .leg.hover {
 	background: rgba(0, 177, 255, 1);
 }
