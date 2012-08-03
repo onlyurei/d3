@@ -3,7 +3,7 @@ window.onload = function() {
 	var cardVerticalMargin = 3;
 	var cardBorderWidth = 1;
 	var contentHeight = 0;
-	var ticks = [0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200, 1260, 1320, 1380, 1439];
+	var ticks = [0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200, 1260, 1320, 1380, 1439]; //in minutes
 	var minNumOfAirports = 2;
 	var maxNumOfAirports = 1000;
 	var minNumOfFlights = 100;
@@ -19,6 +19,9 @@ window.onload = function() {
 	var dest = "";
 	var airports = [];
 	var flights = [];
+	var flightAttrs = [];
+	var sortAscend = true;
+	var lastAttr = "depart";
 
 	//build random airport code array
 	var numOfAirports = randomMinMax(minNumOfAirports, maxNumOfAirports);
@@ -45,18 +48,21 @@ window.onload = function() {
 	//build random flights
 	var numOfFlights = randomMinMax(minNumOfFlights, maxNumOfFlights);
 	for (var i = 0; i < numOfFlights; i++) {
+		//build a random flight
 		var flight = {};
 		var leg = {};
 		var numOfLegs = randomMinMax(minNumOfStops, maxNumOfStops) + 1;
 		var departTime = randomMinMax(minDepartTime, maxArrivalTime);
 		var legAirports = [];
 		var legDurationSum = 0;
+		//build random legs
 		do {
 			flight = {};
 			flight.legs = [];
 			leg = {};
 			numOfLegs = randomMinMax(minNumOfStops, maxNumOfStops) + 1;
 			departTime = randomMinMax(minDepartTime, maxArrivalTime);
+			//build a random leg
 			do {
 				legAirports = [];
 				legDurationSum = 0; 
@@ -71,16 +77,24 @@ window.onload = function() {
 				}
 				legAirports.push(dest);
 				legDurationSum += distanceBetweenAirports(legAirports[j - 1], legAirports[j]);
-			} while (legDurationSum > maxArrivalTime);
+			} while (legDurationSum > maxArrivalTime); //redo if the leg is out of the timeline bound (24 hours)
 			leg.arrive = 0;
 			for (var j = 0; j < numOfLegs; j++) {
 				leg = buildLeg(legAirports[j], legAirports[j + 1], departTime); 
 				departTime += leg.arrive + randomMinMax(minLayoverTime, maxLayoverTime);
 				flight.legs.push(leg);
 			}
-		} while (leg.arrive > maxArrivalTime);
-		flight = buildFlightInfo(flight);
+		} while (leg.arrive > maxArrivalTime); //redo if the flight is out of the timeline bound (24 hours)
+		flight = buildFlightAttrs(flight);
 		flights.push(flight);
+	}
+	//build flight sorting attributes
+	if (flights.length > 0) {
+		for (var attr in flights[0]) {
+			if (typeof flights[0][attr] == "number") {
+				flightAttrs.push(attr);
+			}
+		}
 	}
 	
 	function buildLeg(airport1, airport2, departTime) {
@@ -93,11 +107,12 @@ window.onload = function() {
 		return leg;
 	}
 	
-	function buildFlightInfo(flight) {
+	function buildFlightAttrs(flight) {
 		flight.origin = flight.legs[0].origin;
 		flight.dest = flight.legs[flight.legs.length - 1].dest;
 		flight.depart = flight.legs[0].depart;
 		flight.arrive = flight.legs[flight.legs.length - 1].arrive;
+		flight.stops = flight.legs.length - 1;
 		flight.duration = flight.arrive - flight.depart;
 		var airTime = 0;
 		for (var i = 0; i < flight.legs.length; i++) {
@@ -105,14 +120,12 @@ window.onload = function() {
 		}
 		flight.airTime = airTime;
 		flight.layover = flight.duration - flight.airTime;
-		flight.stops = flight.legs.length - 1;
-		flight.distance = distanceBetweenAirports(flight.origin, flight.dest);
-		flight.price = Math.ceil(flight.distance * flightPriceLegsFactor(flight) * flightPriceTimeFactor(flight) / 1000);
+		flight.price = Math.ceil(distanceBetweenAirports(flight.origin, flight.dest) * flightPriceLegsFactor(flight) * flightPriceTimeFactor(flight) / 1000);
 		return flight;
 	}
 	
 	function flightPriceLegsFactor(flight) {
-		return flight.distance / flight.duration / flight.legs.length;
+		return distanceBetweenAirports(flight.origin, flight.dest) / flight.duration / flight.legs.length;
 	}
 	
 	function flightPriceTimeFactor(flight) {
@@ -138,10 +151,20 @@ window.onload = function() {
 
 	function showLeg(leg) {
 		var s = "";
-		for (var i in leg) {
-			s += i + ": " + leg[i] + "\n";
+		for (var attr in leg) {
+			s += attr + ": " + leg[attr] + "\n";
 		}
-		alert (s);
+		alert(s);
+	}
+	
+	function showFlight(flight) {
+		var s = "";
+		for (var attr in flight) {
+			if (typeof flight[attr] != "object") {
+				s += attr + ": " + flight[attr] + "\n";
+			}
+		}
+		alert(s);
 	}
 
 	function minToTime(minitue) {
@@ -171,50 +194,68 @@ window.onload = function() {
 	}
 	
 	function draw(flights, attr) {
-		d3.select("#fromTo").text(function() { return origin + " -> " + dest; });
-		d3.select("#flightAttr").text(function() { return attr; });
+		contentHeight = 0;
+		d3.select("#fromTo").text(function() { return origin + " → " + dest; });
+		d3.select("#flightSorters").selectAll(".flightSorter").data(flightAttrs).enter().append("div")
+			.attr("class", "flightSorter")
+				.append("a")
+					.attr("class", function(d) { if (d == lastAttr) { return "selected"; } else { return ""; } })
+					.attr("href", "#")
+					.attr("data-attr", function(d) { return d; })
+					.text(function(d) { return d + ((d == lastAttr) ? (sortAscend ? "↓" : "↑") : ""); })
+					.on("click", function() { 
+						var attr = this.getAttribute("data-attr");
+						sortFlights(flights, attr);
+						d3.selectAll(".flightSorter a")
+							.data(flightAttrs)
+							.attr("class", "")
+							.text(function(d) { return d; });
+						this.setAttribute("class", "selected");
+						this.innerHTML = attr + (sortAscend ? "↓" : "↑");
+						draw(flights, attr);
+					});
+		d3.select("#numOfFlights").text(function() { return flights.length + " flights"; });
 		d3.selectAll("#ticks *").remove();
-		d3.select("#ticks").selectAll("div.tick").data(ticks).enter().append("div")
+		d3.select("#ticks").selectAll(".tick").data(ticks).enter().append("div")
 			.attr("class", "tick")
-			.transition()
-			.duration(800)
 			.style("left", function(d) { return d + "px"; })
 			.text(function(d) { return to12(minToTime(d)); });
 		d3.selectAll("#flights *").remove();
-		d3.select("#flights").selectAll("div.flight").data(flights).enter().append("div")
+		d3.select("#flights").selectAll(".flight").data(flights).enter().append("div")
 			.attr("class", "flight")
 			.style("height", function() { return cardHeight + cardBorderWidth * 2 + "px"; })
 			.style("top", function(d, i) { var height = cardHeight + cardVerticalMargin + cardBorderWidth * 2; contentHeight += height; return 20 + i * (height) + "px"; })
 			.text(function(d) { return d[attr]; })
-			.selectAll("div.leg").data(function(d) { return d.legs; }).enter().append("div")
+			.selectAll(".leg").data(function(d) { return d.legs; }).enter().append("div")
 				.attr("class", "leg")
 				.transition()
-				.delay(function (d, i) { return i * d.duration; })
-				.duration(function (d) { return d.duration * 2; })
+				.delay(function(d, i) { return i * d.duration; })
+				.duration(function(d) { return d.duration * 2; })
 				.style("left", function(d) { return d.depart + "px"; })
 				.style("border-width", function() { return cardBorderWidth + "px"; })
 				.style("height", function() { return cardHeight + "px"; })
-				.style("width", function(d) { return d.arrive - d.depart + "px"; })
-				.text(function(d) { return d.origin + " (" + to12(minToTime(d.depart)) + ") -> " + d.dest + " (" + to12(minToTime(d.arrive)) + ")";  });
+				.style("width", function(d) { return d.arrive - d.depart + "px"; });
 		d3.selectAll(".flight")
-			.on("mouseover", function() { this.className = "flight hover"; })
-			.on("mouseout", function() { this.className = "flight"; })
-		d3.selectAll(".flight .leg")
-			.on("mouseover", function() { this.className = "leg hover"; })
-			.on("mouseout", function() { this.className = "leg"; })
+			.on("click", function(d) { showFlight(d); });
+		d3.selectAll(".leg")
+			.html(function(d) { return "<div style='float: left;'>" + d.origin + " [" + to12(minToTime(d.depart)) + "]" + "</div>" + minToTime(d.duration) + "<div style='float: right;'>" + "[" + to12(minToTime(d.arrive)) + "] " + d.dest + "</div>";  })
 			.on("click", function(d) { showLeg(d); });
 		d3.select("#content").style("height", function() { return contentHeight + 20 + "px"; });
 	}
 	
-	function sortFlightsAscend(flights, attr) {
-		flights.sort(function (a, b) { return a[attr] - b[attr]; });
+	function sortFlights(flights, attr) {
+		if (attr != lastAttr) {
+			sortAscend = true;	
+		}
+		if (sortAscend) {
+			flights.sort(function (a, b) { return a[attr] - b[attr]; });
+		} else {
+			flights.sort(function (a, b) { return b[attr] - a[attr]; });
+		}
+		lastAttr = attr;
+		sortAscend = !sortAscend;
 	}
 	
-	function sortFlightsDescend(flights, attr) {
-		flights.sort(function (a, b) { return b[attr] - a[attr]; });
-	}
-	
-	sortFlightsAscend(flights, "price");
-	draw(flights, "price");
-			
+	sortFlights(flights, lastAttr);
+	draw(flights, lastAttr);
 }

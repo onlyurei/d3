@@ -3,25 +3,45 @@ html, body, div, span, p, h1, h2, ul, li, a, img {
 	padding: 0;
 	border: none;
 }
-body {
-	font: 12px Arial, sans-serif;
+ol, ul {
+	list-style: none;
 }
-#wrapper {
-	margin: 10px;	
+body {
+	font: 14px Arial, sans-serif;
+	padding: 10px;	
 }
 #header {
-	padding-bottom: 10px;
+	font-size: 18px;
+	margin-bottom: 10px;
 }
 #fromTo {
 	text-align: center;
 }
-#flightAttr {
-	
+#flightSorters,
+.flightSorter {
+	display: inline-block;
+}
+#flightSorters {
+	margin-left: 40px;	
+}
+.flightSorter {
+	margin-right: 30px;
+	text-transform: capitalize;	
+}
+.flightSorter a {
+	color: #000;
+	text-decoration: none;
+}
+.flightSorter a.selected {
+	font-weight: bolder;	
+}
+#numOfFlights {
+	float: right;	
 }
 #content {
 	position: relative;
 	height: 100%;
-	width: 1440px;
+	width: 1480px;
 	background: #fefefe; /* Old browsers */
 	background: -moz-linear-gradient(top, #fefefe 0%, #ade6ff 100%); /* FF3.6+ */
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #fefefe), color-stop(100%, #ade6ff)); /* Chrome,Safari4+ */
@@ -29,6 +49,10 @@ body {
 	background: -o-linear-gradient(top, #fefefe 0%, #ade6ff 100%); /* Opera 11.10+ */
 	background: -ms-linear-gradient(top, #fefefe 0%, #ade6ff 100%); /* IE10+ */
 	background: linear-gradient(to bottom, #fefefe 0%, #ade6ff 100%); /* W3C */
+}
+.tick,
+.leg {
+	margin-left: 40px;
 }
 .tick {
 	border-left: 1px solid #000;
@@ -42,19 +66,24 @@ body {
 	cursor: auto;
 	position: absolute;
 	left: 0;
-	width: 1440px;
+	width: 1480px;
 }
-.flight.hover {
+.flight:hover {
 	background: rgba(0, 177, 255, .7);
 	cursor: pointer; 	
 }
-.flight .leg {
+.leg {
 	color: #fff;
+	text-align: center;
 	background: rgba(0, 37, 60, .95);
 	border: 1px solid #000;
 	position: absolute;
 	top: 0;
+	overflow: visible;
 }
-.flight .leg.hover {
+.leg:hover {
 	background: rgba(0, 177, 255, 1);
+}
+.legRightLabel {
+	float: right;	
 }
