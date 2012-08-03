@@ -187,23 +187,15 @@ window.onload = function() {
 			return d[attr];
 		}	
 	}
-
-	function showLeg(leg) {
-		var s = "";
-		for (var attr in leg) {
-			s += attr + ": " + formatAttr(leg, attr) + "\n";
-		}
-		alert(s);
-	}
 	
 	function showFlight(flight) {
 		var s = "";
 		for (var attr in flight) {
-			if (typeof flight[attr] != "object") {
-				s += attr + ": " + formatAttr(flight, attr) + "\n";
+			if (["depart", "arrive", "duration", "airTime", "layover", "price"].indexOf(attr) != -1) {
+				s += attr + ": " + formatAttr(flight, attr) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 			}
 		}
-		alert(s);
+		return s;
 	}
 	
 	function draw(flights, attr) {
@@ -238,7 +230,7 @@ window.onload = function() {
 			.attr("class", "flight")
 			.style("height", function() { return cardHeight + cardBorderWidth * 2 + "px"; })
 			.style("top", function(d, i) { var height = cardHeight + cardVerticalMargin + cardBorderWidth * 2; contentHeight += height; return 20 + i * (height) + "px"; })
-			.text(function(d) { return formatAttr(d, attr); })
+			.html(function(d) { return formatAttr(d, attr) + "<div class='flightDetails'>" + showFlight(d) + "</div>"; })
 			.selectAll(".leg").data(function(d) { return d.legs; }).enter().append("div")
 				.attr("class", "leg")
 				.style("left", function(d) { return d.depart + "px"; })
@@ -248,11 +240,8 @@ window.onload = function() {
 				.delay(function(d, i) { return i * d.duration; })
 				.duration(function(d) { return d.duration * 2; })
 				.style("width", function(d) { return d.arrive - d.depart + "px"; });
-		d3.selectAll(".flight")
-			.on("click", function(d) { showFlight(d); });
 		d3.selectAll(".leg")
-			.html(function(d) { return "<div style='float: left;'>" + d.origin + " [" + to12(minToTime(d.depart)) + "]" + "</div>" + minToTime(d.duration) + "<div style='float: right;'>" + "[" + to12(minToTime(d.arrive)) + "] " + d.destination + "</div>";  })
-			.on("click", function(d) { showLeg(d); });
+			.html(function(d) { return "<div style='float: left;'>" + d.origin + " [" + to12(minToTime(d.depart)) + "]" + "</div>" + minToTime(d.duration) + "<div style='float: right;'>" + "[" + to12(minToTime(d.arrive)) + "] " + d.destination + "</div>";  });
 		d3.select("#content").style("height", function() { return contentHeight + 20 + "px"; });
 	}
 	

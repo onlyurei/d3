@@ -57,6 +57,22 @@ body {
 	position: absolute;
 	top: 0;
 }
+.flightDetails {
+	position: absolute;
+	height: 100%;
+	top: 0;
+	left: 50px;
+	width: 1440px;
+	color: transparent;
+	background: transparent;
+	text-align: center;
+	text-transform: capitalize;
+	z-index: 2;
+}
+.flightDetails:hover {
+	color: #fff;
+	background: rgba(0, 177, 255, 1);
+}
 .flight {
 	color: #000;
 	background: none; 
@@ -66,7 +82,8 @@ body {
 	width: 1490px;
 }
 .flight:hover {
-	background: rgba(0, 177, 255, .7);
+	font-size: 16px;
+	background: rgba(0, 177, 255, 1);
 	cursor: pointer; 	
 }
 .leg {
