@@ -16,14 +16,14 @@ window.onload = function() {
 	var maxArrivalTime = 1439;
 	var airportChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	var origin = "";
-	var dest = "";
+	var destination = "";
 	var airports = [];
 	var flights = [];
 	var flightAttrs = [];
 	var sortAscend = true;
 	var lastAttr = "depart";
 
-	//build random airport code array
+	//build random airport codes
 	var numOfAirports = randomMinMax(minNumOfAirports, maxNumOfAirports);
 	for (var i = 0; i < numOfAirports; i++) {
 		var airport = "";
@@ -39,10 +39,10 @@ window.onload = function() {
 		airports.push(airport);
 	}
 	
-	//build origin and destination aiports
-	dest = origin = airports[randomMax(airports.length)];
-	while (dest == origin) {
-		dest = airports[randomMax(airports.length)];
+	//pick random origin and destination aiports
+	destination = origin = airports[randomMax(airports.length)];
+	while (destination == origin) {
+		destination = airports[randomMax(airports.length)];
 	}
 
 	//build random flights
@@ -75,7 +75,7 @@ window.onload = function() {
 					legAirports.push(airport);
 					legDurationSum += distanceBetweenAirports(legAirports[j - 1], legAirports[j]);
 				}
-				legAirports.push(dest);
+				legAirports.push(destination);
 				legDurationSum += distanceBetweenAirports(legAirports[j - 1], legAirports[j]);
 			} while (legDurationSum > maxArrivalTime); //redo if the leg is out of the timeline bound (24 hours)
 			leg.arrive = 0;
@@ -100,7 +100,7 @@ window.onload = function() {
 	function buildLeg(airport1, airport2, departTime) {
 		var leg = {};
 		leg.origin = airport1;
-		leg.dest = airport2;
+		leg.destination = airport2;
 		leg.depart = departTime;
 		leg.duration = distanceBetweenAirports(airport1, airport2);
 		leg.arrive = leg.depart + leg.duration;
@@ -109,7 +109,7 @@ window.onload = function() {
 	
 	function buildFlightAttrs(flight) {
 		flight.origin = flight.legs[0].origin;
-		flight.dest = flight.legs[flight.legs.length - 1].dest;
+		flight.destination = flight.legs[flight.legs.length - 1].destination;
 		flight.depart = flight.legs[0].depart;
 		flight.arrive = flight.legs[flight.legs.length - 1].arrive;
 		flight.stops = flight.legs.length - 1;
@@ -120,15 +120,18 @@ window.onload = function() {
 		}
 		flight.airTime = airTime;
 		flight.layover = flight.duration - flight.airTime;
-		flight.price = Math.ceil(distanceBetweenAirports(flight.origin, flight.dest) * flightPriceLegsFactor(flight) * flightPriceTimeFactor(flight) / 1000);
+		//distance between origin and destination x legs factor x time factor
+		flight.price = Math.ceil(distanceBetweenAirports(flight.origin, flight.destination) * flightPriceLegsFactor(flight) * flightPriceTimeFactor(flight) / 1000);
 		return flight;
 	}
 	
 	function flightPriceLegsFactor(flight) {
-		return distanceBetweenAirports(flight.origin, flight.dest) / flight.duration / flight.legs.length;
+		//the longer of the entire flight duration and the more stops, the cheaper
+		return distanceBetweenAirports(flight.origin, flight.destination) / flight.duration / flight.legs.length;
 	}
 	
 	function flightPriceTimeFactor(flight) {
+		//red-eye flights suck but are cheaper!
 		return Math.min(Math.abs(flight.depart - 60 * 4) + Math.abs(flight.arrive - 60 * 4), Math.abs(flight.depart - 60 * 23) + Math.abs(flight.arrive - 60 * 23));
 	}
 	
@@ -147,24 +150,6 @@ window.onload = function() {
 	
 	function randomMinMax(min, max) {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
-	}
-
-	function showLeg(leg) {
-		var s = "";
-		for (var attr in leg) {
-			s += attr + ": " + leg[attr] + "\n";
-		}
-		alert(s);
-	}
-	
-	function showFlight(flight) {
-		var s = "";
-		for (var attr in flight) {
-			if (typeof flight[attr] != "object") {
-				s += attr + ": " + flight[attr] + "\n";
-			}
-		}
-		alert(s);
 	}
 
 	function minToTime(minitue) {
@@ -193,9 +178,37 @@ window.onload = function() {
 		}
 	}
 	
+	function formatAttr(d, attr) {
+		if(["depart", "arrive"].indexOf(attr) != -1) {
+			return to12(minToTime(d[attr]));
+		} else if(["duration", "airTime", "layover"].indexOf(attr) != -1) {
+			return minToTime(d[attr]);
+		} else {
+			return d[attr];
+		}	
+	}
+
+	function showLeg(leg) {
+		var s = "";
+		for (var attr in leg) {
+			s += attr + ": " + formatAttr(leg, attr) + "\n";
+		}
+		alert(s);
+	}
+	
+	function showFlight(flight) {
+		var s = "";
+		for (var attr in flight) {
+			if (typeof flight[attr] != "object") {
+				s += attr + ": " + formatAttr(flight, attr) + "\n";
+			}
+		}
+		alert(s);
+	}
+	
 	function draw(flights, attr) {
 		contentHeight = 0;
-		d3.select("#fromTo").text(function() { return origin + " → " + dest; });
+		d3.select("#fromTo").text(function() { return origin + " → " + destination; });
 		d3.select("#flightSorters").selectAll(".flightSorter").data(flightAttrs).enter().append("div")
 			.attr("class", "flightSorter")
 				.append("a")
@@ -225,20 +238,20 @@ window.onload = function() {
 			.attr("class", "flight")
 			.style("height", function() { return cardHeight + cardBorderWidth * 2 + "px"; })
 			.style("top", function(d, i) { var height = cardHeight + cardVerticalMargin + cardBorderWidth * 2; contentHeight += height; return 20 + i * (height) + "px"; })
-			.text(function(d) { return d[attr]; })
+			.text(function(d) { return formatAttr(d, attr); })
 			.selectAll(".leg").data(function(d) { return d.legs; }).enter().append("div")
 				.attr("class", "leg")
-				.transition()
-				.delay(function(d, i) { return i * d.duration; })
-				.duration(function(d) { return d.duration * 2; })
 				.style("left", function(d) { return d.depart + "px"; })
 				.style("border-width", function() { return cardBorderWidth + "px"; })
 				.style("height", function() { return cardHeight + "px"; })
+				.transition()
+				.delay(function(d, i) { return i * d.duration; })
+				.duration(function(d) { return d.duration * 2; })
 				.style("width", function(d) { return d.arrive - d.depart + "px"; });
 		d3.selectAll(".flight")
 			.on("click", function(d) { showFlight(d); });
 		d3.selectAll(".leg")
-			.html(function(d) { return "<div style='float: left;'>" + d.origin + " [" + to12(minToTime(d.depart)) + "]" + "</div>" + minToTime(d.duration) + "<div style='float: right;'>" + "[" + to12(minToTime(d.arrive)) + "] " + d.dest + "</div>";  })
+			.html(function(d) { return "<div style='float: left;'>" + d.origin + " [" + to12(minToTime(d.depart)) + "]" + "</div>" + minToTime(d.duration) + "<div style='float: right;'>" + "[" + to12(minToTime(d.arrive)) + "] " + d.destination + "</div>";  })
 			.on("click", function(d) { showLeg(d); });
 		d3.select("#content").style("height", function() { return contentHeight + 20 + "px"; });
 	}

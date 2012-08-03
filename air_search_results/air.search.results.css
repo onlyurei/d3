@@ -3,9 +3,6 @@ html, body, div, span, p, h1, h2, ul, li, a, img {
 	padding: 0;
 	border: none;
 }
-ol, ul {
-	list-style: none;
-}
 body {
 	font: 14px Arial, sans-serif;
 	padding: 10px;	
@@ -22,7 +19,7 @@ body {
 	display: inline-block;
 }
 #flightSorters {
-	margin-left: 40px;	
+	margin-left: 50px;	
 }
 .flightSorter {
 	margin-right: 30px;
@@ -41,7 +38,7 @@ body {
 #content {
 	position: relative;
 	height: 100%;
-	width: 1480px;
+	width: 1490px;
 	background: #fefefe; /* Old browsers */
 	background: -moz-linear-gradient(top, #fefefe 0%, #ade6ff 100%); /* FF3.6+ */
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #fefefe), color-stop(100%, #ade6ff)); /* Chrome,Safari4+ */
@@ -52,7 +49,7 @@ body {
 }
 .tick,
 .leg {
-	margin-left: 40px;
+	margin-left: 50px;
 }
 .tick {
 	border-left: 1px solid #000;
@@ -66,7 +63,7 @@ body {
 	cursor: auto;
 	position: absolute;
 	left: 0;
-	width: 1480px;
+	width: 1490px;
 }
 .flight:hover {
 	background: rgba(0, 177, 255, .7);
