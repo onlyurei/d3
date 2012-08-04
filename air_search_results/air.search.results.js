@@ -6,12 +6,12 @@ window.onload = function() {
 	var ticks = [0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200, 1260, 1320, 1380, 1439]; //in minutes
 	var minNumOfAirports = 2;
 	var maxNumOfAirports = 1000;
-	var minNumOfFlights = 100;
-	var maxNumOfFlights = 300;
+	var minNumOfFlights = 200;
+	var maxNumOfFlights = 500;
 	var minNumOfStops = 0;
 	var maxNumOfStops = 3;
 	var minLayoverTime = 0;
-	var maxLayoverTime = 200;
+	var maxLayoverTime = 1439;
 	var minDepartTime = 0;
 	var maxArrivalTime = 1439;
 	var airportChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -21,7 +21,7 @@ window.onload = function() {
 	var flights = [];
 	var flightAttrs = [];
 	var sortAscend = true;
-	var lastAttr = "depart";
+	var lastAttr = "price";
 
 	//build random airport codes
 	var numOfAirports = randomMinMax(minNumOfAirports, maxNumOfAirports);
