@@ -69,9 +69,12 @@ body {
 	text-transform: capitalize;
 	z-index: 2;
 }
+.flight.selected .flightDetails, 
 .flightDetails:hover {
 	color: #fff;
+	font-size: 16px;
 	background: rgba(0, 177, 255, 1);
+	cursor: pointer; 	
 }
 .flight {
 	color: #000;
@@ -80,11 +83,6 @@ body {
 	position: absolute;
 	left: 0;
 	width: 1490px;
-}
-.flight:hover {
-	font-size: 16px;
-	background: rgba(0, 177, 255, 1);
-	cursor: pointer; 	
 }
 .leg {
 	color: #fff;

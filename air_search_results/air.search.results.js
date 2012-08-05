@@ -21,7 +21,8 @@ window.onload = function() {
 	var flights = [];
 	var flightAttrs = [];
 	var sortAscend = true;
-	var lastAttr = "price";
+	var initialAttr = "price";
+	var lastAttr = "";
 
 	//build random airport codes
 	var numOfAirports = randomMinMax(minNumOfAirports, maxNumOfAirports);
@@ -90,8 +91,9 @@ window.onload = function() {
 	}
 	//build flight sorting attributes
 	if (flights.length > 0) {
+		var supportedTypes = "number boolean";
 		for (var attr in flights[0]) {
-			if (typeof flights[0][attr] == "number") {
+			if (supportedTypes.indexOf(typeof flights[0][attr]) != -1) {
 				flightAttrs.push(attr);
 			}
 		}
@@ -108,6 +110,7 @@ window.onload = function() {
 	}
 	
 	function buildFlightAttrs(flight) {
+		flight.price = 0;
 		flight.origin = flight.legs[0].origin;
 		flight.destination = flight.legs[flight.legs.length - 1].destination;
 		flight.depart = flight.legs[0].depart;
@@ -122,6 +125,7 @@ window.onload = function() {
 		flight.layover = flight.duration - flight.airTime;
 		//distance between origin and destination x legs factor x time factor
 		flight.price = Math.ceil(distanceBetweenAirports(flight.origin, flight.destination) * flightPriceLegsFactor(flight) * flightPriceTimeFactor(flight) / 1000);
+		flight.selected = false;
 		return flight;
 	}
 	
@@ -198,6 +202,15 @@ window.onload = function() {
 		return s;
 	}
 	
+	function toggleClass(targetClass, toggleClass) {
+		var index = targetClass.indexOf(toggleClass);
+		if (index == -1) {
+			return targetClass + " " + toggleClass;	
+		} else {
+			return targetClass.substring(0, index - 1);	
+		}
+	}
+	
 	function draw(flights, attr) {
 		contentHeight = 0;
 		d3.select("#fromTo").text(function() { return origin + " → " + destination; });
@@ -207,7 +220,7 @@ window.onload = function() {
 					.attr("class", function(d) { if (d == lastAttr) { return "selected"; } else { return ""; } })
 					.attr("href", "#")
 					.attr("data-attr", function(d) { return d; })
-					.text(function(d) { return d + ((d == lastAttr) ? (sortAscend ? "↓" : "↑") : ""); })
+					.text(function(d) { return d + ((d == lastAttr && d != "selected") ? (sortAscend ? "↑" : "↓") : ""); })
 					.on("click", function() { 
 						var attr = this.getAttribute("data-attr");
 						sortFlights(flights, attr);
@@ -216,7 +229,7 @@ window.onload = function() {
 							.attr("class", "")
 							.text(function(d) { return d; });
 						this.setAttribute("class", "selected");
-						this.innerHTML = attr + (sortAscend ? "↓" : "↑");
+						this.innerHTML = attr + (attr != "selected" ? (sortAscend ? "↑" : "↓") : "");
 						draw(flights, attr);
 					});
 		d3.select("#numOfFlights").text(function() { return flights.length + " flights"; });
@@ -227,7 +240,7 @@ window.onload = function() {
 			.text(function(d) { return to12(minToTime(d)); });
 		d3.selectAll("#flights *").remove();
 		d3.select("#flights").selectAll(".flight").data(flights).enter().append("div")
-			.attr("class", "flight")
+			.attr("class", function(d) { return (d.selected ? "flight selected" : "flight"); })
 			.style("height", function() { return cardHeight + cardBorderWidth * 2 + "px"; })
 			.style("top", function(d, i) { var height = cardHeight + cardVerticalMargin + cardBorderWidth * 2; contentHeight += height; return 20 + i * (height) + "px"; })
 			.html(function(d) { return formatAttr(d, attr) + "<div class='flightDetails'>" + showFlight(d) + "</div>"; })
@@ -240,24 +253,31 @@ window.onload = function() {
 				.delay(function(d, i) { return i * d.duration; })
 				.duration(function(d) { return d.duration * 2; })
 				.style("width", function(d) { return d.arrive - d.depart + "px"; });
+		d3.selectAll(".flight")
+			.on("click", function(d) {
+				resultClass = toggleClass(this.getAttribute("class"), "selected");
+				this.setAttribute("class", resultClass);
+				d.selected = resultClass.indexOf("selected") != -1;
+			});
 		d3.selectAll(".leg")
 			.html(function(d) { return "<div style='float: left;'>" + d.origin + " [" + to12(minToTime(d.depart)) + "]" + "</div>" + minToTime(d.duration) + "<div style='float: right;'>" + "[" + to12(minToTime(d.arrive)) + "] " + d.destination + "</div>";  });
 		d3.select("#content").style("height", function() { return contentHeight + 20 + "px"; });
 	}
 	
 	function sortFlights(flights, attr) {
-		if (attr != lastAttr) {
-			sortAscend = true;	
+		if(attr != "selected" && attr == lastAttr) {
+			sortAscend = !sortAscend;
 		}
-		if (sortAscend) {
-			flights.sort(function (a, b) { return a[attr] - b[attr]; });
-		} else {
-			flights.sort(function (a, b) { return b[attr] - a[attr]; });
-		}
+		flights.sort(function(a, b) {
+			var result = a[attr] - b[attr];
+			if (!sortAscend || attr == "selected") {
+				return 0 - result;	
+			}
+			return result;
+		});
 		lastAttr = attr;
-		sortAscend = !sortAscend;
 	}
 	
-	sortFlights(flights, lastAttr);
-	draw(flights, lastAttr);
+	sortFlights(flights, initialAttr);
+	draw(flights, initialAttr);
 }
