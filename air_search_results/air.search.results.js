@@ -249,9 +249,6 @@ window.onload = function() {
 				.style("left", function(d) { return d.depart + "px"; })
 				.style("border-width", function() { return cardBorderWidth + "px"; })
 				.style("height", function() { return cardHeight + "px"; })
-				.transition()
-				.delay(function(d, i) { return i * d.duration; })
-				.duration(function(d) { return d.duration * 2; })
 				.style("width", function(d) { return d.arrive - d.depart + "px"; });
 		d3.selectAll(".flight")
 			.on("click", function(d) {

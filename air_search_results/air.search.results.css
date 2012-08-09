@@ -93,9 +93,6 @@ body {
 	top: 0;
 	overflow: visible;
 }
-.leg:hover {
-	background: rgba(0, 177, 255, 1);
-}
 .legRightLabel {
 	float: right;	
 }
