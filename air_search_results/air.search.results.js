@@ -1,43 +1,49 @@
 window.onload = function() {
-	var cardHeight = 18;
-	var cardVerticalMargin = 3;
-	var cardBorderWidth = 1;
-	var contentHeight = 0;
-	var ticks = [0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200, 1260, 1320, 1380, 1439]; //in minutes
-	var minNumOfAirports = 2;
-	var maxNumOfAirports = 1000;
-	var minNumOfFlights = 200;
-	var maxNumOfFlights = 500;
-	var minNumOfStops = 0;
-	var maxNumOfStops = 3;
-	var minLayoverTime = 0;
-	var maxLayoverTime = 1439;
-	var minDepartTime = 0;
-	var maxArrivalTime = 1439;
-	var airportChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	var origin = "";
-	var destination = "";
-	var airports = [];
-	var flights = [];
-	var flightAttrs = [];
-	var sortAscend = true;
-	var initialAttr = "price";
-	var lastAttr = "";
+	var cardHeight = 18,
+		cardVerticalMargin = 3,
+		cardBorderWidth = 1,
+		contentHeight = 0,
+		ticks = [0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200, 1260, 1320, 1380, 1439], //in minutes
+		minNumOfAirports = 2,
+		maxNumOfAirports = 1000,
+		minNumOfCarriers = 2,
+		maxNumOfCarriers = 30,
+		minNumOfFlights = 50,
+		maxNumOfFlights = 300,
+		minNumOfStops = 0,
+		maxNumOfStops = 3,
+		minLayoverTime = 0,
+		maxLayoverTime = 1439,
+		minDepartTime = 0,
+		maxArrivalTime = 1439,
+		airportChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+		origin = "",
+		destination = "",
+		airports = [],
+		carriers = [],
+		flights = [],
+		flightAttrs = [],
+		sortAscend = true,
+		initialAttr = "price",
+		lastAttr = "";
 
-	//build random airport codes
-	var numOfAirports = randomMinMax(minNumOfAirports, maxNumOfAirports);
-	for (var i = 0; i < numOfAirports; i++) {
-		var airport = "";
-		for (var j = 0; j < 3; j++) {
-			airport += airportChars.charAt(Math.floor(Math.random() * airportChars.length));
+	airports = buildRandomCombos(airportChars, 3, minNumOfAirports, maxNumOfAirports);
+	carriers = buildRandomCombos(airportChars, 2, minNumOfCarriers, maxNumOfCarriers);
+	
+	function buildRandomCombos(units, size, minNum, maxNum) {
+		var num = randomMinMax(minNum, maxNum), 
+			combo = "",
+			combos = [];
+		for (var i = 0; i < num; i++) {
+			do {
+				combo = "";
+				for (var j = 0; j < size; j++) {
+					combo += units.charAt(Math.floor(Math.random() * units.length));
+				} 
+			} while (combos.indexOf(combo) != -1)
+			combos.push(combo);
 		}
-		while (airports.indexOf(airport) != -1) {
-			airport = "";
-			for (var j = 0; j < 2; j++) {
-				airport += airportChars.charAt(Math.floor(Math.random() * airportChars.length));
-			}
-		}
-		airports.push(airport);
+		return combos;
 	}
 	
 	//pick random origin and destination aiports
@@ -50,12 +56,13 @@ window.onload = function() {
 	var numOfFlights = randomMinMax(minNumOfFlights, maxNumOfFlights);
 	for (var i = 0; i < numOfFlights; i++) {
 		//build a random flight
-		var flight = {};
-		var leg = {};
-		var numOfLegs = randomMinMax(minNumOfStops, maxNumOfStops) + 1;
-		var departTime = randomMinMax(minDepartTime, maxArrivalTime);
-		var legAirports = [];
-		var legDurationSum = 0;
+		var flight = {},
+			leg = {},
+			carrier = carriers[randomMax(carriers.length)],
+			numOfLegs = randomMinMax(minNumOfStops, maxNumOfStops) + 1,
+			departTime = randomMinMax(minDepartTime, maxArrivalTime),
+			legAirports = [],
+			legDurationSum = 0;
 		//build random legs
 		do {
 			flight = {};
@@ -81,7 +88,8 @@ window.onload = function() {
 			} while (legDurationSum > maxArrivalTime); //redo if the leg is out of the timeline bound (24 hours)
 			leg.arrive = 0;
 			for (var j = 0; j < numOfLegs; j++) {
-				leg = buildLeg(legAirports[j], legAirports[j + 1], departTime); 
+				leg = buildLeg(legAirports[j], legAirports[j + 1], departTime);
+				leg.carrier = carrier;
 				departTime += leg.arrive + randomMinMax(minLayoverTime, maxLayoverTime);
 				flight.legs.push(leg);
 			}
@@ -89,11 +97,13 @@ window.onload = function() {
 		flight = buildFlightAttrs(flight);
 		flights.push(flight);
 	}
+	
 	//build flight sorting attributes
 	if (flights.length > 0) {
-		var supportedTypes = "number boolean";
+		var supportedTypes = "number boolean string",
+			excludes = "origin destination";
 		for (var attr in flights[0]) {
-			if (supportedTypes.indexOf(typeof flights[0][attr]) != -1) {
+			if (supportedTypes.indexOf(typeof flights[0][attr]) != -1 && excludes.indexOf(attr) == -1) {
 				flightAttrs.push(attr);
 			}
 		}
@@ -125,6 +135,7 @@ window.onload = function() {
 		flight.layover = flight.duration - flight.airTime;
 		//distance between origin and destination x legs factor x time factor
 		flight.price = Math.ceil(distanceBetweenAirports(flight.origin, flight.destination) * flightPriceLegsFactor(flight) * flightPriceTimeFactor(flight) / 1000);
+		flight.carrier = flight.legs[0].carrier;
 		flight.selected = false;
 		return flight;
 	}
@@ -195,7 +206,9 @@ window.onload = function() {
 	function showFlight(flight) {
 		var s = "";
 		for (var attr in flight) {
-			if (["depart", "arrive", "duration", "airTime", "layover", "price"].indexOf(attr) != -1) {
+			var supportedTypes = "number string",
+				excludes = "origin destination";
+			if (supportedTypes.indexOf(typeof flights[0][attr]) != -1 && excludes.indexOf(attr) == -1) {
 				s += attr + ": " + formatAttr(flight, attr) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 			}
 		}
@@ -209,6 +222,22 @@ window.onload = function() {
 		} else {
 			return targetClass.substring(0, index - 1);	
 		}
+	}
+	
+	function unitsRange(units, size) {
+		return Math.pow(units.length, size);	
+	}
+	
+	function comboNum(combo, units) {
+		var num = 0;
+		for (var i = 0; i < combo.length; i++) {
+			num += units.indexOf(combo.charAt(i));
+		}
+		return num;
+	}
+	
+	function rangeNumToHexColor(range, num) {
+		return (num / range * Math.pow(16, 6));	
 	}
 	
 	function draw(flights, attr) {
@@ -246,9 +275,13 @@ window.onload = function() {
 			.html(function(d) { return formatAttr(d, attr) + "<div class='flightDetails'>" + showFlight(d) + "</div>"; })
 			.selectAll(".leg").data(function(d) { return d.legs; }).enter().append("div")
 				.attr("class", "leg")
+				.style("background-color", function(d) { return rangeNumToHexColor(unitsRange(airportChars, 2), comboNum(d.carrier, airportChars)); })
 				.style("left", function(d) { return d.depart + "px"; })
 				.style("border-width", function() { return cardBorderWidth + "px"; })
 				.style("height", function() { return cardHeight + "px"; })
+				.transition()
+				.delay(function(d, i) { return i * d.duration; })
+				.duration(function(d) { return d.duration * 2; })
 				.style("width", function(d) { return d.arrive - d.depart + "px"; });
 		d3.selectAll(".flight")
 			.on("click", function(d) {
@@ -257,7 +290,7 @@ window.onload = function() {
 				d.selected = resultClass.indexOf("selected") != -1;
 			});
 		d3.selectAll(".leg")
-			.html(function(d) { return "<div style='float: left;'>" + d.origin + " [" + to12(minToTime(d.depart)) + "]" + "</div>" + minToTime(d.duration) + "<div style='float: right;'>" + "[" + to12(minToTime(d.arrive)) + "] " + d.destination + "</div>";  });
+			.html(function(d) { return "<div style='float: left;'>" + d.origin + " " + to12(minToTime(d.depart)) + "</div>" + d.carrier + " " + minToTime(d.duration) + "<div style='float: right;'>" + to12(minToTime(d.arrive)) + " " + d.destination + "</div>";  });
 		d3.select("#content").style("height", function() { return contentHeight + 20 + "px"; });
 	}
 	
@@ -265,13 +298,15 @@ window.onload = function() {
 		if(attr != "selected" && attr == lastAttr) {
 			sortAscend = !sortAscend;
 		}
-		flights.sort(function(a, b) {
-			var result = a[attr] - b[attr];
-			if (!sortAscend || attr == "selected") {
-				return 0 - result;	
-			}
-			return result;
-		});
+		if (["number", "boolean", "string"].indexOf(typeof flights[0][attr]) != -1) {
+			flights.sort(function(a, b) {
+				var result = a[attr] < b[attr] ? -1 : 1;
+				if (!sortAscend || attr == "selected") {
+					return - result;	
+				}
+				return result;
+			});
+		}
 		lastAttr = attr;
 	}
 	
