@@ -290,7 +290,7 @@ window.onload = function() {
 				d.selected = resultClass.indexOf("selected") != -1;
 			});
 		d3.selectAll(".leg")
-			.html(function(d) { return "<div style='float: left;'>" + d.origin + " " + to12(minToTime(d.depart)) + "</div>" + d.carrier + " " + minToTime(d.duration) + "<div style='float: right;'>" + to12(minToTime(d.arrive)) + " " + d.destination + "</div>";  });
+			.html(function(d) { return "<div style='float: left;'>" + to12(minToTime(d.depart)) + " " + d.origin + "</div>" + d.carrier + " " + minToTime(d.duration) + "<div style='float: right;'>" + d.destination + " " + to12(minToTime(d.arrive)) + "</div>";  });
 		d3.select("#content").style("height", function() { return contentHeight + 20 + "px"; });
 	}
 	
