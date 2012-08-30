@@ -1,8 +1,8 @@
 window.onload = function() {
-	var cardHeight = 18,
+	var cardHeight = 14,
 		cardVerticalMargin = 3,
 		cardBorderWidth = 1,
-		contentHeight = 0,
+		scale = 1.1,
 		ticks = [0, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200, 1260, 1320, 1380, 1439], //in minutes
 		minNumOfAirports = 2,
 		maxNumOfAirports = 1000,
@@ -265,7 +265,7 @@ window.onload = function() {
 		d3.selectAll("#ticks *").remove();
 		d3.select("#ticks").selectAll(".tick").data(ticks).enter().append("div")
 			.attr("class", "tick")
-			.style("left", function(d) { return d + "px"; })
+			.style("left", function(d) { return d / scale + "px"; })
 			.text(function(d) { return to12(minToTime(d)); });
 		d3.selectAll("#flights *").remove();
 		d3.select("#flights").selectAll(".flight").data(flights).enter().append("div")
@@ -276,13 +276,13 @@ window.onload = function() {
 			.selectAll(".leg").data(function(d) { return d.legs; }).enter().append("div")
 				.attr("class", "leg")
 				.style("background-color", function(d) { return rangeNumToHexColor(unitsRange(airportChars, 2), comboNum(d.carrier, airportChars)); })
-				.style("left", function(d) { return d.depart + "px"; })
+				.style("left", function(d) { return d.depart / scale + "px"; })
 				.style("border-width", function() { return cardBorderWidth + "px"; })
 				.style("height", function() { return cardHeight + "px"; })
 				.transition()
 				.delay(function(d, i) { return i * d.duration; })
 				.duration(function(d) { return d.duration * 2; })
-				.style("width", function(d) { return d.arrive - d.depart + "px"; });
+				.style("width", function(d) { return (d.arrive - d.depart) / scale + "px"; });
 		d3.selectAll(".flight")
 			.on("click", function(d) {
 				resultClass = toggleClass(this.getAttribute("class"), "selected");

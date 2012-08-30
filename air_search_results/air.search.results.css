@@ -4,7 +4,7 @@ html, body, div, span, p, h1, h2, ul, li, a, img {
 	border: none;
 }
 body {
-	font: 14px Arial, sans-serif;
+	font: 13px Arial, sans-serif;
 	padding: 10px;	
 }
 #header {
@@ -19,7 +19,7 @@ body {
 	display: inline-block;
 }
 #flightSorters {
-	margin-left: 50px;	
+	margin-left: 45px;	
 }
 .flightSorter {
 	margin-right: 30px;
@@ -38,7 +38,7 @@ body {
 #content {
 	position: relative;
 	height: 100%;
-	width: 1490px;
+	min-width: 1400px;
 	background: #fefefe; /* Old browsers */
 	background: -moz-linear-gradient(top, #fefefe 0%, #ade6ff 100%); /* FF3.6+ */
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #fefefe), color-stop(100%, #ade6ff)); /* Chrome,Safari4+ */
@@ -49,7 +49,7 @@ body {
 }
 .tick,
 .leg {
-	margin-left: 50px;
+	margin-left: 45px;
 }
 .tick {
 	border-left: 1px solid #000;
@@ -61,8 +61,8 @@ body {
 	position: absolute;
 	height: 100%;
 	top: 0;
-	left: 50px;
-	width: 1440px;
+	left: 0;
+	width: 100%;
 	color: transparent;
 	background: transparent;
 	text-align: center;
@@ -78,11 +78,11 @@ body {
 }
 .flight {
 	color: #000;
-	background: none; 
+	background: none;
 	cursor: auto;
 	position: absolute;
 	left: 0;
-	width: 1490px;
+	width: 100%;
 }
 .leg {
 	color: #fff;
